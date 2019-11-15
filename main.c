@@ -10,6 +10,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <getopt.h>
+#include <fcntl.h>
+
 
 #include "pcap.h"
 #include "print.h"
@@ -20,6 +22,9 @@ static char interface[128];
 static char ip_addr[16];
 static uint16_t port;
 static int udp_sock_fd;
+static int cut_len;
+static int loop_times = 1;
+static int sleep_time;
 
 void create_udp_socket()
 {
@@ -63,7 +68,7 @@ void init(int argc, char *argv[])
 	};
 
 	i = 0;
-	while ((ret = getopt_long(argc, argv, "f:o:i:p:vhd", long_options, &index)) != -1)
+	while ((ret = getopt_long(argc, argv, "f:o:i:p:c:l:s:vhd", long_options, &index)) != -1)
 	{
 		switch (ret)
 		{
@@ -87,8 +92,17 @@ void init(int argc, char *argv[])
 				port = atoi(optarg);
 				i++;
 		   	 	break;
+			case 'c':
+				cut_len = atoi(optarg);
+				break;
+			case 'l':
+				loop_times = atoi(optarg);
+				break;
+			case 's':
+				sleep_time = atoi(optarg);
+				break;
 			case 'v':
-				printf("%s version 1.0\n", argv[0]);
+				printf("%s version 1.0\n", PROMGRAM_NAME);
 				exit(0);
 				break;
 			case 'h':
@@ -114,23 +128,22 @@ void init(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	FILE *fp;
+	int file_fd;
+	int ret, cnt;
 	char buf[1500];
-	int n;
-	int i;
 	struct pcap_file_header pf;
 	struct packete_header ph;
 
 	init(argc, argv);
-	
-	fp = fopen(pcap_file_name, "r");
-	if(fp == NULL)
+	file_fd = open(pcap_file_name, O_RDONLY);
+	if(file_fd < 0)
 	{
         print_errno("Can't open file: %s", pcap_file_name);
-		return 1;
+		exit(-1);
 	}
-	n = fread(&pf, 1, sizeof(struct pcap_file_header), fp);
-	if(n < 0)
+	
+	ret = read(file_fd, &pf, sizeof(struct pcap_file_header));
+	if(ret < 0)
 	{
 	    print_errno("Read file : %s error", pcap_file_name);
 	}
@@ -139,14 +152,30 @@ int main(int argc, char *argv[])
 		print_error("File : %s isn't a pcap file!", pcap_file_name);
 	}
 
-	i = 0;
-	while((n = fread(&ph, 1, sizeof(struct packete_header), fp)) > 0)
+	cnt = 0;
+	while(1)
 	{
-		i++;
-		n = fread(&buf, 1, ph.caplen, fp);
-		n = send(udp_sock_fd, buf + 42, n - 42, 0);
+		lseek(file_fd, sizeof(struct pcap_file_header), SEEK_SET);
+		while((ret = read(file_fd, &ph, sizeof(struct packete_header))) > 0)
+		{
+			ret = read(file_fd, &buf, ph.caplen);
+			if(send(udp_sock_fd, buf + cut_len, ph.caplen - cut_len, 0) < 0)
+			{
+				print_errno("%s", "Send packer error!");
+				exit(-1);
+			}
+			usleep(sleep_time);
+		}
+		cnt++;
+		if(cnt == loop_times)
+		{
+			break;
+		}
+		if(loop_times <= 0)
+		{
+			cnt--;
+		}
 	}
-	printf("send sum :%d\n", i);
 	close(udp_sock_fd);
 	
 	return 0;		

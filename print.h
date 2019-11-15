@@ -4,6 +4,8 @@
 #define print_errno(fmt, args...) printf("\033[;31m[errno = %d(%s)]:\033[0m"#fmt"\r\n", errno, strerror(errno), ##args)
 #define print_error(fmt, args...) printf("\033[;31m"#fmt"\033[0m\r\n", ##args)
 
+#define PROMGRAM_NAME "sendpcap"
+
 #define ARGUMENTS "\
 Usage:\n\
 $ ./NetFlow2MySQL -i <listen interface> -p <listen port>\n\
