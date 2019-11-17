@@ -36,6 +36,10 @@ void create_udp_socket()
 		print_errno("%s", "Create socket failed!");
 		exit(-1);
 	}
+    if(debug)
+    {
+        printf("Socket created successfully!\n");
+    }
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -45,6 +49,10 @@ void create_udp_socket()
     {
 		print_errno("%s", "Create socket failed!");
 		exit(-1);
+    }
+    if(debug)
+    {
+        printf("Socket bind %s:%d successfully!\n", ip_addr, port);
     }
 
 	return;
@@ -68,6 +76,7 @@ void init(int argc, char *argv[])
 	};
 
 	i = 0;
+    opterr = 0;
 	while ((ret = getopt_long(argc, argv, "f:o:i:p:c:l:s:vhd", long_options, &index)) != -1)
 	{
 		switch (ret)
@@ -117,7 +126,7 @@ void init(int argc, char *argv[])
 		}
 	}
 	if(i != 4){
-		perror(ARGUMENTS);
+		printf(ARGUMENTS);
 		exit(-1);
 	}
 	create_udp_socket();
@@ -141,7 +150,11 @@ int main(int argc, char *argv[])
         print_errno("Can't open file: %s", pcap_file_name);
 		exit(-1);
 	}
-	
+
+    if(debug)
+    {
+        printf("File: %s open successfully!\n", pcap_file_name);
+    }
 	ret = read(file_fd, &pf, sizeof(struct pcap_file_header));
 	if(ret < 0)
 	{
@@ -159,14 +172,22 @@ int main(int argc, char *argv[])
 		while((ret = read(file_fd, &ph, sizeof(struct packete_header))) > 0)
 		{
 			ret = read(file_fd, &buf, ph.caplen);
-			if(send(udp_sock_fd, buf + cut_len, ph.caplen - cut_len, 0) < 0)
+			if((ret = send(udp_sock_fd, buf + cut_len, ph.caplen - cut_len, 0)) < 0)
 			{
 				print_errno("%s", "Send packer error!");
 				exit(-1);
 			}
+            if(debug)
+            {
+                printf("Send %d bytes.\n", ret);
+            }
 			usleep(sleep_time);
 		}
-		cnt++;
+        cnt++;
+        if(debug)
+        {
+            printf("File: %s sent successfully! (%d)\n", pcap_file_name, cnt);
+        }
 		if(cnt == loop_times)
 		{
 			break;
