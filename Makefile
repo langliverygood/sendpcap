@@ -16,6 +16,8 @@ subdirs: $(COMPILE_DIR)
 #链接obj所有的.o 文件
 $(TARGET): $(OBJS)
 	$(CC) -o $(BUILD_DIR)/$(TARGET) $(OBJS) -L$(LIB_DIR) $(LFLAGS)
+	chmod +x $(BUILD_DIR)/$(TARGET)
+	cp $(BUILD_DIR)/$(TARGET) /usr/bin/
 
 OBJS = $(wildcard $(OBJ_DIR)/*.o)
 
@@ -24,5 +26,6 @@ clean:
 	@find . -name '*.d' -type f -print -exec rm -rf {} \;
 	rm -rf $(OBJ_DIR)/*.o
 	rm -rf $(BUILD_DIR)/$(TARGET)
+	rm -f /usr/bin/$(TARGET)
 
 .PHONY: all clean
