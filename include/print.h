@@ -7,21 +7,17 @@
 #define PROMGRAM_NAME "sendpcap"
 
 #define ARGUMENTS "\
-Usage:\n\
-$ ./NetFlow2MySQL -i <listen interface> -p <listen port>\n\
-                  [--receive-buffer-size <receive buffer size of UDP socket>]\n\
-                  [--mysql-host <mysql host name>]\n\
-                  [--mysql-user <mysql-user>]\n\
-                  [--mysql-password <mysql password>]\n\
-                  [--mysql-database <mysql database>]\n\
-                  [--mysql-port <mysql port>]\n\
-                  [--store-exporter-address]\n\
-                  [-d]\n\
-                  [--packet-sampling-rate <sampling rate>]\n\
-$ ./NetFlow2MySQL -v\n\
-See\n\
-http://cluster19.aist-nara.ac.jp/public/NetFlow2MySQL/NetFlow2MySQL.html\n\
-for details.\n"
-
-
+Usage: sendpcap -o device_name -i ip_address -p port -f pcap_file_name\n\
+                [-l loop_times] [-s sleep_time] [-c cut_length] [-d] [-v] [-h]\n\
+\nDESCRIPTION:\n\
+                  --interface <select a network device.] -o <necessary>\n\
+                  --ip <target ip>] -i <necessary>\n\
+                  --port <target port>] -p <necessary>\n\
+                  --file <select a pcap file.>] -f <necessary>\n\
+                  --loop <How many times to send pcap files.Default one time.>] -l <optional>\n\
+                  --sleep <Interval for sending each pacekt(um).Default 0um>] -s <optional>\n\
+                  --cut <Length of header to be removed for each pacekt.Default 0.>] -c <optional>\n\
+                  --debug <Print some debug message.>] -d <optional>\n\
+                  --version <Show current sendpcap's version.>] -v <optional>\n\
+                  --help <Show this description>] -h <optional>\n"
 #endif
